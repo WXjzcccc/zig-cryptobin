@@ -714,6 +714,20 @@ test "fluent AES CBC compatibility" {
     try std.testing.expectEqualSlices(u8, "useData", decoded.ToString());
 }
 
+test "AES zero padding round trip" {
+    const allocator = std.testing.allocator;
+    var crypt = try FromString(allocator, "zero padding message");
+    defer crypt.deinit();
+    _ = try crypt.SetKey("0123456789abcdef");
+    _ = try crypt.Aes().ECB().ZeroPadding().Encrypt();
+
+    var decrypted = try FromBytes(allocator, crypt.ToBytes());
+    defer decrypted.deinit();
+    _ = try decrypted.SetKey("0123456789abcdef");
+    _ = try decrypted.Aes().ECB().ZeroPadding().Decrypt();
+    try std.testing.expectEqualSlices(u8, "zero padding message", decrypted.ToBytes());
+}
+
 test "go-cryptobin default AES ECB compatibility" {
     const allocator = std.testing.allocator;
     var crypt = try FromString(allocator, "useData5useData5");

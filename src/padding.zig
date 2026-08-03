@@ -66,8 +66,9 @@ pub fn remove(allocator: std.mem.Allocator, input: []const u8, block_size: usize
     var amount: usize = 0;
     switch (kind) {
         .zero => {
-            amount = input.len;
-            while (amount > 0 and input[amount - 1] == 0) amount -= 1;
+            var plain_len = input.len;
+            while (plain_len > 0 and input[plain_len - 1] == 0) plain_len -= 1;
+            return allocator.dupe(u8, input[0..plain_len]);
         },
         .pkcs5, .pkcs7, .x923, .pboc2, .iso10126 => {
             amount = input[input.len - 1];
@@ -100,6 +101,15 @@ test "pkcs7 padding" {
     const padded = try add(allocator, "hello", 16, .pkcs7);
     defer allocator.free(padded);
     const plain = try remove(allocator, padded, 16, .pkcs7);
+    defer allocator.free(plain);
+    try std.testing.expectEqualSlices(u8, "hello", plain);
+}
+
+test "zero padding removes the zero suffix" {
+    const allocator = std.testing.allocator;
+    const padded = try add(allocator, "hello", 16, .zero);
+    defer allocator.free(padded);
+    const plain = try remove(allocator, padded, 16, .zero);
     defer allocator.free(plain);
     try std.testing.expectEqualSlices(u8, "hello", plain);
 }
