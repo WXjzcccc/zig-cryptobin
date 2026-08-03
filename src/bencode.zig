@@ -19,6 +19,8 @@ pub const Value = union(enum) {
     list: []Value,
     dict: []Entry,
 
+    /// Releases all recursively owned byte strings, list items, and dictionary entries.
+    /// Ownership: call this once for every Value returned by decode; use the same allocator passed to decode.
     pub fn deinit(self: *Value, allocator: std.mem.Allocator) void {
         switch (self.*) {
             .integer => {},
@@ -93,6 +95,8 @@ fn appendValue(writer: *std.ArrayList(u8), allocator: std.mem.Allocator, value: 
     }
 }
 
+/// Encodes a Value as canonical bencode.
+/// Ownership: the returned slice is allocated with allocator; the caller must release it with allocator.free.
 pub fn encode(allocator: std.mem.Allocator, value: Value) ![]u8 {
     var output: std.ArrayList(u8) = .empty;
     errdefer output.deinit(allocator);
@@ -190,6 +194,8 @@ const Parser = struct {
     }
 };
 
+/// Parses canonical bencode from input and copies all variable-sized fields.
+/// Ownership: the returned Value owns allocated fields; release it with value.deinit(allocator).
 pub fn decode(allocator: std.mem.Allocator, input: []const u8) Error!Value {
     var parser = Parser{ .allocator = allocator, .input = input };
     var value = try parser.parseValue();

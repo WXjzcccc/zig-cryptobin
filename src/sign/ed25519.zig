@@ -23,6 +23,8 @@ pub const KeyPair = struct {
     public_key: PublicKey,
     secret_key: SecretKey,
 
+    /// Derives a deterministic Ed25519 key pair from seed.
+    /// Ownership: the returned fixed-size key pair is an inline value and requires no release.
     pub fn fromSeed(seed: Seed) Error!KeyPair {
         const key_pair = try StdEd25519.KeyPair.generateDeterministic(seed);
         return .{
@@ -31,6 +33,8 @@ pub const KeyPair = struct {
         };
     }
 
+    /// Reconstructs an Ed25519 key pair from its encoded secret key.
+    /// Ownership: the returned fixed-size key pair is an inline value and requires no release.
     pub fn fromSecretKey(secret_key: SecretKey) Error!KeyPair {
         const raw_secret_key = try StdEd25519.SecretKey.fromBytes(secret_key);
         const key_pair = try StdEd25519.KeyPair.fromSecretKey(raw_secret_key);
@@ -41,26 +45,36 @@ pub const KeyPair = struct {
     }
 };
 
+/// Converts a byte slice to a fixed-size Ed25519 seed.
+/// Ownership: the returned seed is an inline array and requires no release.
 pub fn seedFromBytes(bytes: []const u8) Error!Seed {
     if (bytes.len != seed_length) return error.InvalidSeedLength;
     return bytes[0..seed_length].*;
 }
 
+/// Converts a byte slice to a fixed-size Ed25519 public key.
+/// Ownership: the returned key is an inline array and requires no release.
 pub fn publicKeyFromBytes(bytes: []const u8) Error!PublicKey {
     if (bytes.len != public_key_length) return error.InvalidPublicKeyLength;
     return bytes[0..public_key_length].*;
 }
 
+/// Converts a byte slice to a fixed-size Ed25519 secret key.
+/// Ownership: the returned key is an inline array and requires no release.
 pub fn secretKeyFromBytes(bytes: []const u8) Error!SecretKey {
     if (bytes.len != secret_key_length) return error.InvalidSecretKeyLength;
     return bytes[0..secret_key_length].*;
 }
 
+/// Converts a byte slice to a fixed-size Ed25519 signature.
+/// Ownership: the returned signature is an inline array and requires no release.
 pub fn signatureFromBytes(bytes: []const u8) Error!Signature {
     if (bytes.len != signature_length) return error.InvalidSignatureLength;
     return bytes[0..signature_length].*;
 }
 
+/// Generates a random Ed25519 key pair.
+/// Ownership: the returned fixed-size key pair is an inline value and requires no release.
 pub fn generateKey() KeyPair {
     var io_context = std.Io.Threaded.init(std.heap.page_allocator, .{});
     defer io_context.deinit();
@@ -71,6 +85,8 @@ pub fn generateKey() KeyPair {
     };
 }
 
+/// Signs message with secret_key.
+/// Ownership: the returned fixed-size signature is an inline value and requires no release.
 pub fn sign(secret_key: SecretKey, message: []const u8) Error!Signature {
     const key_pair = try KeyPair.fromSecretKey(secret_key);
     const raw_secret_key = try StdEd25519.SecretKey.fromBytes(key_pair.secret_key);
@@ -78,6 +94,8 @@ pub fn sign(secret_key: SecretKey, message: []const u8) Error!Signature {
     return (try raw_key_pair.sign(message, null)).toBytes();
 }
 
+/// Verifies an Ed25519 signature.
+/// Ownership: no allocation is performed and the returned boolean requires no release.
 pub fn verify(public_key: PublicKey, message: []const u8, signature: Signature) bool {
     const raw_public_key = StdEd25519.PublicKey.fromBytes(public_key) catch return false;
     const raw_signature = StdEd25519.Signature.fromBytes(signature);

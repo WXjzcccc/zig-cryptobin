@@ -2,6 +2,8 @@ const std = @import("std");
 
 pub const Error = error{ InvalidBase64, InvalidHex } || std.mem.Allocator.Error;
 
+/// Encodes `input` using standard Base64.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn base64Encode(allocator: std.mem.Allocator, input: []const u8) Error![]u8 {
     const size = std.base64.standard.Encoder.calcSize(input.len);
     const output = try allocator.alloc(u8, size);
@@ -9,6 +11,8 @@ pub fn base64Encode(allocator: std.mem.Allocator, input: []const u8) Error![]u8 
     return output;
 }
 
+/// Decodes a standard Base64 value.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn base64Decode(allocator: std.mem.Allocator, input: []const u8) Error![]u8 {
     const size = std.base64.standard.Decoder.calcSizeForSlice(input) catch return error.InvalidBase64;
     const output = try allocator.alloc(u8, size);
@@ -17,6 +21,8 @@ pub fn base64Decode(allocator: std.mem.Allocator, input: []const u8) Error![]u8 
     return output;
 }
 
+/// Encodes `input` as lower-case hexadecimal text.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn hexEncode(allocator: std.mem.Allocator, input: []const u8) Error![]u8 {
     const output = try allocator.alloc(u8, input.len * 2);
     const alphabet = "0123456789abcdef";
@@ -27,6 +33,8 @@ pub fn hexEncode(allocator: std.mem.Allocator, input: []const u8) Error![]u8 {
     return output;
 }
 
+/// Decodes lower- or upper-case hexadecimal text.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn hexDecode(allocator: std.mem.Allocator, input: []const u8) Error![]u8 {
     if (input.len % 2 != 0) return error.InvalidHex;
     const output = try allocator.alloc(u8, input.len / 2);

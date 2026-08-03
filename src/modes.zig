@@ -17,6 +17,8 @@ fn incrementCounter(counter: []u8) void {
     }
 }
 
+/// Applies a block or stream mode to `input`.
+/// Ownership: the returned ciphertext or plaintext is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn apply(allocator: std.mem.Allocator, algorithm: cipher.Algorithm, key: []const u8, input: []const u8, iv: []const u8, kind: Kind, encrypt: bool, tea_rounds: u32) Error![]u8 {
     try cipher.validateKey(algorithm, key);
     const block_size = cipher.blockLength(algorithm);

@@ -21,6 +21,8 @@ fn fillSecureRandom(output: []u8) std.Io.RandomSecureError!void {
     try io_context.io().randomSecure(output);
 }
 
+/// Adds `kind` padding to `input` for the given block size.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn add(allocator: std.mem.Allocator, input: []const u8, block_size: usize, kind: Kind) Error![]u8 {
     if (block_size == 0) return error.InvalidBlockSize;
     const remainder = input.len % block_size;
@@ -56,6 +58,8 @@ pub fn add(allocator: std.mem.Allocator, input: []const u8, block_size: usize, k
     return output;
 }
 
+/// Validates and removes `kind` padding from `input`.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn remove(allocator: std.mem.Allocator, input: []const u8, block_size: usize, kind: Kind) Error![]u8 {
     if (kind == .no_padding) return allocator.dupe(u8, input);
     if (input.len == 0 or input.len % block_size != 0) return error.InvalidPadding;

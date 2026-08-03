@@ -40,6 +40,8 @@ fn block(output: *[64]u8, counter: u32, key: [32]u8, nonce: [12]u8) void {
     }
 }
 
+/// XORs input with the ChaCha20 keystream and writes into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn xor(output: []u8, input: []const u8, counter: u32, key: [32]u8, nonce: [12]u8) Error!void {
     if (output.len != input.len) return error.OutputLengthMismatch;
     var current_counter = counter;

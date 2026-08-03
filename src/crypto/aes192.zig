@@ -123,6 +123,8 @@ fn mixColumns(state: *[block_length]u8, inverse_mix: bool) void {
     }
 }
 
+/// Encrypts one AES-192 block into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn encrypt(output: *[block_length]u8, input: [block_length]u8, key: [key_length]u8) void {
     const round_keys = expandKey(key);
     var state = input;
@@ -139,6 +141,8 @@ pub fn encrypt(output: *[block_length]u8, input: [block_length]u8, key: [key_len
     output.* = state;
 }
 
+/// Decrypts one AES-192 block into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn decrypt(output: *[block_length]u8, input: [block_length]u8, key: [key_length]u8) void {
     const round_keys = expandKey(key);
     var state = input;

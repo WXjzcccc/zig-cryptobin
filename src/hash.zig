@@ -4,6 +4,8 @@ const sm3 = @import("hash/sm3.zig");
 pub const Kind = enum { md5, sha1, sha256, sha512, sha3_256, sha3_512, sm3 };
 pub const Error = std.mem.Allocator.Error || error{UnsupportedHash};
 
+/// Returns the digest size, in bytes, for `kind`.
+/// Ownership: no allocation is performed and the returned integer requires no release.
 pub fn digestLength(kind: Kind) usize {
     return switch (kind) {
         .md5 => std.crypto.hash.Md5.digest_length,
@@ -16,6 +18,8 @@ pub fn digestLength(kind: Kind) usize {
     };
 }
 
+/// Computes a digest for `input` using `kind`.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn digest(allocator: std.mem.Allocator, kind: Kind, input: []const u8) Error![]u8 {
     const output = try allocator.alloc(u8, digestLength(kind));
     switch (kind) {
@@ -30,6 +34,8 @@ pub fn digest(allocator: std.mem.Allocator, kind: Kind, input: []const u8) Error
     return output;
 }
 
+/// Computes an HMAC for `input` using `key` and `kind`.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn hmac(allocator: std.mem.Allocator, kind: Kind, key: []const u8, input: []const u8) Error![]u8 {
     const output = try allocator.alloc(u8, digestLength(kind));
     switch (kind) {

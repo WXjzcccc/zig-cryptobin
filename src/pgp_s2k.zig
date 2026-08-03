@@ -3,6 +3,8 @@ const std = @import("std");
 pub const Hash = enum { md5, sha1, sha256, sha512 };
 pub const Error = error{MissingSaltForIteration} || std.mem.Allocator.Error;
 
+/// Derives an OpenPGP S2K key using `hash`.
+/// Ownership: the returned key bytes are allocated with `allocator`; the caller must release them with `allocator.free`.
 pub fn derive(allocator: std.mem.Allocator, hash: Hash, password: []const u8, salt: []const u8, iterations: usize, length: usize) Error![]u8 {
     if (iterations > 1 and salt.len == 0) return error.MissingSaltForIteration;
     return switch (hash) {

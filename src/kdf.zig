@@ -26,6 +26,8 @@ fn pbkdf2(allocator: std.mem.Allocator, comptime Hmac: type, output: []u8, passw
     }
 }
 
+/// Derives `length` bytes with PBKDF2-HMAC-SHA256.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn pbkdf2Sha256(allocator: std.mem.Allocator, password: []const u8, salt: []const u8, rounds: u32, length: usize) Error![]u8 {
     const result = try allocator.alloc(u8, length);
     errdefer allocator.free(result);
@@ -33,6 +35,8 @@ pub fn pbkdf2Sha256(allocator: std.mem.Allocator, password: []const u8, salt: []
     return result;
 }
 
+/// Derives `length` bytes with PBKDF2-HMAC-SHA512.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn pbkdf2Sha512(allocator: std.mem.Allocator, password: []const u8, salt: []const u8, rounds: u32, length: usize) Error![]u8 {
     const result = try allocator.alloc(u8, length);
     errdefer allocator.free(result);
@@ -40,6 +44,8 @@ pub fn pbkdf2Sha512(allocator: std.mem.Allocator, password: []const u8, salt: []
     return result;
 }
 
+/// Derives `length` bytes with HKDF-SHA256.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn hkdfSha256(allocator: std.mem.Allocator, salt: []const u8, ikm: []const u8, info: []const u8, length: usize) Error![]u8 {
     const result = try allocator.alloc(u8, length);
     const prk = std.crypto.kdf.hkdf.HkdfSha256.extract(salt, ikm);
@@ -47,6 +53,8 @@ pub fn hkdfSha256(allocator: std.mem.Allocator, salt: []const u8, ikm: []const u
     return result;
 }
 
+/// Derives `length` bytes with scrypt.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn scrypt(allocator: std.mem.Allocator, password: []const u8, salt: []const u8, cost: usize, block_size: u30, parallelization: u30, length: usize) Error![]u8 {
     if (cost < 2 or !std.math.isPowerOfTwo(cost)) return error.WeakParameters;
     const log_cost: u6 = @intCast(std.math.log2(cost));
@@ -61,6 +69,8 @@ pub fn scrypt(allocator: std.mem.Allocator, password: []const u8, salt: []const 
     return output;
 }
 
+/// Derives `length` bytes with bcrypt-PBKDF.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn bcryptPbkdf(allocator: std.mem.Allocator, password: []const u8, salt: []const u8, rounds: u32, length: usize) Error![]u8 {
     if (rounds == 0 or password.len == 0 or salt.len == 0 or length == 0) return error.WeakParameters;
     const output = try allocator.alloc(u8, length);
@@ -69,6 +79,8 @@ pub fn bcryptPbkdf(allocator: std.mem.Allocator, password: []const u8, salt: []c
     return output;
 }
 
+/// Derives `length` bytes with the OpenSSH bcrypt KDF.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn bcryptOpenSshKdf(allocator: std.mem.Allocator, password: []const u8, salt: []const u8, rounds: u32, length: usize) Error![]u8 {
     if (rounds == 0 or password.len == 0 or salt.len == 0 or length == 0) return error.WeakParameters;
     const output = try allocator.alloc(u8, length);

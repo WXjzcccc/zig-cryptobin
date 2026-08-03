@@ -105,13 +105,19 @@ fn apply(input: [8]u8, key: [8]u8, is_decrypt: bool) [8]u8 {
     return output;
 }
 
+/// Encrypts one DES block into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn encrypt(output: *[8]u8, input: [8]u8, key: [8]u8) void {
     output.* = apply(input, key, false);
 }
+/// Decrypts one DES block into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn decrypt(output: *[8]u8, input: [8]u8, key: [8]u8) void {
     output.* = apply(input, key, true);
 }
 
+/// Encrypts one block with the three-key TripleDES EDE construction.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn encryptTriple(output: *[8]u8, input: [8]u8, first: [8]u8, second: [8]u8, third: [8]u8) void {
     var stage: [8]u8 = undefined;
     encrypt(&stage, input, first);
@@ -119,6 +125,8 @@ pub fn encryptTriple(output: *[8]u8, input: [8]u8, first: [8]u8, second: [8]u8, 
     encrypt(output, stage, third);
 }
 
+/// Decrypts one block with the three-key TripleDES EDE construction.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn decryptTriple(output: *[8]u8, input: [8]u8, first: [8]u8, second: [8]u8, third: [8]u8) void {
     var stage: [8]u8 = undefined;
     decrypt(&stage, input, third);

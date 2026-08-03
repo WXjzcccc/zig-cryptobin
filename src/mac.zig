@@ -2,6 +2,8 @@ const std = @import("std");
 
 pub const Error = error{InvalidKeyLength} || std.mem.Allocator.Error;
 
+/// Computes an AES-CMAC with a 128- or 256-bit key.
+/// Ownership: the returned 16-byte tag is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn cmacAes(allocator: std.mem.Allocator, key: []const u8, message: []const u8) Error![]u8 {
     const output = try allocator.alloc(u8, 16);
     if (key.len == 16) {

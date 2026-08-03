@@ -2,6 +2,8 @@ const std = @import("std");
 
 pub const Error = std.mem.Allocator.Error || std.Io.RandomSecureError;
 
+/// Generates `length` cryptographically secure random bytes.
+/// Ownership: the returned slice is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn bytes(allocator: std.mem.Allocator, length: usize) Error![]u8 {
     const output = try allocator.alloc(u8, length);
     errdefer allocator.free(output);
@@ -11,6 +13,8 @@ pub fn bytes(allocator: std.mem.Allocator, length: usize) Error![]u8 {
     return output;
 }
 
+/// Renders an SSH-style random-art fingerprint.
+/// Ownership: the returned text is allocated with `allocator`; the caller must release it with `allocator.free`.
 pub fn randomart(allocator: std.mem.Allocator, fingerprint: []const u8) std.mem.Allocator.Error![]u8 {
     const width = 17;
     const height = 9;

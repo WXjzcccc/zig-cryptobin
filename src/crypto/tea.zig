@@ -14,6 +14,8 @@ fn keyWords(key: [16]u8) [4]u32 {
     };
 }
 
+/// Encrypts one TEA block into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn encrypt(output: *[8]u8, input: [8]u8, key: [16]u8, rounds: u32) Error!void {
     if (rounds % 2 != 0) return error.InvalidRounds;
     const words = keyWords(key);
@@ -29,6 +31,8 @@ pub fn encrypt(output: *[8]u8, input: [8]u8, key: [16]u8, rounds: u32) Error!voi
     std.mem.writeInt(u32, output[4..8], right, .big);
 }
 
+/// Decrypts one TEA block into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn decrypt(output: *[8]u8, input: [8]u8, key: [16]u8, rounds: u32) Error!void {
     if (rounds % 2 != 0) return error.InvalidRounds;
     const words = keyWords(key);
@@ -44,6 +48,8 @@ pub fn decrypt(output: *[8]u8, input: [8]u8, key: [16]u8, rounds: u32) Error!voi
     std.mem.writeInt(u32, output[4..8], right, .big);
 }
 
+/// Encrypts one XTEA block into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn encryptXtea(output: *[8]u8, input: [8]u8, key: [16]u8) void {
     const words = keyWords(key);
     var table: [64]u32 = undefined;
@@ -65,6 +71,8 @@ pub fn encryptXtea(output: *[8]u8, input: [8]u8, key: [16]u8) void {
     std.mem.writeInt(u32, output[4..8], right, .big);
 }
 
+/// Decrypts one XTEA block into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn decryptXtea(output: *[8]u8, input: [8]u8, key: [16]u8) void {
     const words = keyWords(key);
     var table: [64]u32 = undefined;

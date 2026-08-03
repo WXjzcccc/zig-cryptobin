@@ -19,6 +19,8 @@ pub const KeyPair = struct {
     public_key: PublicKey,
     secret_key: SecretKey,
 
+    /// Derives an X25519 public key and returns the complete key pair.
+    /// Ownership: the returned fixed-size key pair is an inline value and requires no release.
     pub fn fromSecretKey(secret_key: SecretKey) Error!KeyPair {
         return .{
             .public_key = try publicKey(secret_key),
@@ -27,26 +29,36 @@ pub const KeyPair = struct {
     }
 };
 
+/// Converts a byte slice to a fixed-size X25519 secret key.
+/// Ownership: the returned key is an inline array and requires no release.
 pub fn secretKeyFromBytes(bytes: []const u8) Error!SecretKey {
     if (bytes.len != secret_key_length) return error.InvalidSecretKeyLength;
     return bytes[0..secret_key_length].*;
 }
 
+/// Converts a byte slice to a fixed-size X25519 public key.
+/// Ownership: the returned key is an inline array and requires no release.
 pub fn publicKeyFromBytes(bytes: []const u8) Error!PublicKey {
     if (bytes.len != public_key_length) return error.InvalidPublicKeyLength;
     return bytes[0..public_key_length].*;
 }
 
+/// Generates a random X25519 key pair.
+/// Ownership: the returned fixed-size key pair is an inline value and requires no release.
 pub fn generateKey() KeyPair {
     var io_context = std.Io.Threaded.init(std.heap.page_allocator, .{});
     defer io_context.deinit();
     return StdX25519.KeyPair.generate(io_context.io());
 }
 
+/// Derives the X25519 public key corresponding to secret_key.
+/// Ownership: the returned key is an inline array and requires no release.
 pub fn publicKey(secret_key: SecretKey) Error!PublicKey {
     return StdX25519.recoverPublicKey(secret_key);
 }
 
+/// Computes an X25519 shared secret.
+/// Ownership: the returned fixed-size secret is an inline array and requires no release.
 pub fn ecdh(secret_key: SecretKey, remote_public_key: PublicKey) Error!SharedSecret {
     return StdX25519.scalarmult(secret_key, remote_public_key);
 }

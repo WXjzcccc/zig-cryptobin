@@ -68,9 +68,13 @@ fn crypt(output: *[16]u8, input: [16]u8, key: [16]u8, is_decrypt: bool) void {
     for (0..4) |index| std.mem.writeInt(u32, output[index * 4 ..][0..4], words[35 - index], .big);
 }
 
+/// Encrypts one SM4 block into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn encrypt(output: *[16]u8, input: [16]u8, key: [16]u8) void {
     crypt(output, input, key, false);
 }
+/// Decrypts one SM4 block into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn decrypt(output: *[16]u8, input: [16]u8, key: [16]u8) void {
     crypt(output, input, key, true);
 }

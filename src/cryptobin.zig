@@ -33,6 +33,8 @@ pub const Cryptobin = struct {
     use_ccm: bool,
     ccm_tag_length: u8,
 
+    /// Initializes an empty Cryptobin using allocator for all owned buffers.
+    /// Ownership: the returned struct is an inline value; call its deinit method to release buffers it later owns.
     pub fn init(allocator: std.mem.Allocator) Cryptobin {
         return .{
             .allocator = allocator,
@@ -52,6 +54,8 @@ pub const Cryptobin = struct {
         };
     }
 
+    /// Releases the input, key, IV, associated data, parsed data, and any other owned buffers.
+    /// Ownership: call this exactly once for each initialized Cryptobin, using the allocator supplied at initialization.
     pub fn deinit(self: *Cryptobin) void {
         self.free(&self.data);
         self.free(&self.key);
@@ -81,85 +85,117 @@ pub const Cryptobin = struct {
         self.use_ccm = false;
     }
 
+    /// Copies value into the input data and returns self for fluent configuration.
+    /// Ownership: no new return value is allocated; release the Cryptobin with deinit when finished.
     pub fn FromBytes(self: *Cryptobin, value: []const u8) !*Cryptobin {
         try self.replace(&self.data, value);
         return self;
     }
 
+    /// Copies a string into the input data and returns self for fluent configuration.
+    /// Ownership: no new return value is allocated; release the Cryptobin with deinit when finished.
     pub fn FromString(self: *Cryptobin, value: []const u8) !*Cryptobin {
         return self.FromBytes(value);
     }
 
+    /// Decodes a Base64 string into the input data and returns self.
+    /// Ownership: decoded data becomes owned by self; release it with deinit. The returned pointer is borrowed.
     pub fn FromBase64String(self: *Cryptobin, value: []const u8) !*Cryptobin {
         const decoded = try encoding.base64Decode(self.allocator, value);
         self.replaceOwned(&self.data, decoded);
         return self;
     }
 
+    /// Decodes a hexadecimal string into the input data and returns self.
+    /// Ownership: decoded data becomes owned by self; release it with deinit. The returned pointer is borrowed.
     pub fn FromHexString(self: *Cryptobin, value: []const u8) !*Cryptobin {
         const decoded = try encoding.hexDecode(self.allocator, value);
         self.replaceOwned(&self.data, decoded);
         return self;
     }
 
+    /// Copies value into the cipher key and returns self.
+    /// Ownership: the key copy is owned by self and released by deinit; the returned pointer is borrowed.
     pub fn SetKey(self: *Cryptobin, value: []const u8) !*Cryptobin {
         try self.replace(&self.key, value);
         return self;
     }
 
+    /// Alias for SetKey for fluent configuration.
+    /// Ownership: the key copy is released by deinit; the returned pointer is borrowed.
     pub fn WithKey(self: *Cryptobin, value: []const u8) !*Cryptobin {
         return self.SetKey(value);
     }
 
+    /// Copies value into the initialization vector and returns self.
+    /// Ownership: the IV copy is owned by self and released by deinit; the returned pointer is borrowed.
     pub fn SetIv(self: *Cryptobin, value: []const u8) !*Cryptobin {
         try self.replace(&self.iv, value);
         return self;
     }
 
+    /// Alias for SetIv for fluent configuration.
+    /// Ownership: the IV copy is released by deinit; the returned pointer is borrowed.
     pub fn WithIv(self: *Cryptobin, value: []const u8) !*Cryptobin {
         return self.SetIv(value);
     }
 
+    /// Copies associated authenticated data and returns self.
+    /// Ownership: the copy is owned by self and released by deinit; the returned pointer is borrowed.
     pub fn SetAdditional(self: *Cryptobin, value: []const u8) !*Cryptobin {
         try self.replace(&self.additional_data, value);
         return self;
     }
 
+    /// Selects AES and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn Aes(self: *Cryptobin) *Cryptobin {
         self.algorithm = .aes;
         return self;
     }
 
+    /// Selects DES and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn Des(self: *Cryptobin) *Cryptobin {
         self.algorithm = .des;
         self.disableAead();
         return self;
     }
 
+    /// Selects two-key TripleDES and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn TwoDes(self: *Cryptobin) *Cryptobin {
         self.algorithm = .two_des;
         self.disableAead();
         return self;
     }
 
+    /// Selects three-key TripleDES and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn TripleDes(self: *Cryptobin) *Cryptobin {
         self.algorithm = .triple_des;
         self.disableAead();
         return self;
     }
 
+    /// Selects RC4 and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn RC4(self: *Cryptobin) *Cryptobin {
         self.algorithm = .rc4;
         self.disableAead();
         return self;
     }
 
+    /// Selects RC4 with an MD5-derived key and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn RC4MD5(self: *Cryptobin) *Cryptobin {
         self.algorithm = .rc4_md5;
         self.disableAead();
         return self;
     }
 
+    /// Selects TEA and optionally sets its round count.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn Tea(self: *Cryptobin, rounds: ?u32) *Cryptobin {
         self.algorithm = .tea;
         self.disableAead();
@@ -167,18 +203,24 @@ pub const Cryptobin = struct {
         return self;
     }
 
+    /// Selects XTEA and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn Xtea(self: *Cryptobin) *Cryptobin {
         self.algorithm = .xtea;
         self.disableAead();
         return self;
     }
 
+    /// Selects SM4 and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn SM4(self: *Cryptobin) *Cryptobin {
         self.algorithm = .sm4;
         self.disableAead();
         return self;
     }
 
+    /// Selects ChaCha20 and sets its initial block counter.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn Chacha20(self: *Cryptobin, counter: u32) *Cryptobin {
         self.algorithm = .chacha20;
         self.disableAead();
@@ -186,48 +228,66 @@ pub const Cryptobin = struct {
         return self;
     }
 
+    /// Selects ChaCha20-Poly1305 and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn Chacha20poly1305(self: *Cryptobin) *Cryptobin {
         self.algorithm = .chacha20_poly1305;
         self.disableAead();
         return self;
     }
 
+    /// Selects XChaCha20-Poly1305 and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn Chacha20poly1305X(self: *Cryptobin) *Cryptobin {
         self.algorithm = .xchacha20_poly1305;
         self.disableAead();
         return self;
     }
 
+    /// Selects ECB mode and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn ECB(self: *Cryptobin) *Cryptobin {
         self.mode = .ecb;
         self.disableAead();
         return self;
     }
+    /// Selects CBC mode and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn CBC(self: *Cryptobin) *Cryptobin {
         self.mode = .cbc;
         self.disableAead();
         return self;
     }
+    /// Selects PCBC mode and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn PCBC(self: *Cryptobin) *Cryptobin {
         self.mode = .pcbc;
         self.disableAead();
         return self;
     }
+    /// Selects CFB mode and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn CFB(self: *Cryptobin) *Cryptobin {
         self.mode = .cfb;
         self.disableAead();
         return self;
     }
+    /// Selects OFB mode and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn OFB(self: *Cryptobin) *Cryptobin {
         self.mode = .ofb;
         self.disableAead();
         return self;
     }
+    /// Selects CTR mode and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn CTR(self: *Cryptobin) *Cryptobin {
         self.mode = .ctr;
         self.disableAead();
         return self;
     }
+    /// Selects AES-GCM and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn GCM(self: *Cryptobin) *Cryptobin {
         self.algorithm = .aes;
         self.use_gcm = true;
@@ -235,6 +295,8 @@ pub const Cryptobin = struct {
         return self;
     }
 
+    /// Selects AES-CCM with a 16-byte tag and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn CCM(self: *Cryptobin) *Cryptobin {
         self.algorithm = .aes;
         self.disableAead();
@@ -243,65 +305,93 @@ pub const Cryptobin = struct {
         return self;
     }
 
+    /// Selects AES-CCM and applies the requested nonce-size configuration.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn CCMWithNonceSize(self: *Cryptobin, nonce_size: usize) *Cryptobin {
         _ = self.CCM();
         if (nonce_size != 13) self.ccm_tag_length = 0;
         return self;
     }
 
+    /// Selects AES-CCM and sets the requested authentication tag size.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn CCMWithTagSize(self: *Cryptobin, tag_size: usize) *Cryptobin {
         _ = self.CCM();
         self.ccm_tag_length = @intCast(tag_size);
         return self;
     }
 
+    /// Selects AES-CCM and sets both nonce-size and tag-size configuration.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn CCMWithNonceAndTagSize(self: *Cryptobin, nonce_size: usize, tag_size: usize) *Cryptobin {
         self.CCMWithNonceSize(nonce_size);
         self.ccm_tag_length = @intCast(tag_size);
         return self;
     }
 
+    /// Selects no padding and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn NoPadding(self: *Cryptobin) *Cryptobin {
         self.padding_kind = .no_padding;
         return self;
     }
+    /// Selects zero padding and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn ZeroPadding(self: *Cryptobin) *Cryptobin {
         self.padding_kind = .zero;
         return self;
     }
+    /// Selects PKCS5 padding and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn PKCS5Padding(self: *Cryptobin) *Cryptobin {
         self.padding_kind = .pkcs5;
         return self;
     }
+    /// Selects PKCS7 padding and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn PKCS7Padding(self: *Cryptobin) *Cryptobin {
         self.padding_kind = .pkcs7;
         return self;
     }
+    /// Selects X9.23 padding and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn X923Padding(self: *Cryptobin) *Cryptobin {
         self.padding_kind = .x923;
         return self;
     }
+    /// Selects ISO 10126 padding and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn ISO10126Padding(self: *Cryptobin) *Cryptobin {
         self.padding_kind = .iso10126;
         return self;
     }
+    /// Selects ISO 7816-4 padding and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn ISO7816_4Padding(self: *Cryptobin) *Cryptobin {
         self.padding_kind = .iso7816_4;
         return self;
     }
+    /// Selects ISO 9797-1 padding and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn ISO97971Padding(self: *Cryptobin) *Cryptobin {
         self.padding_kind = .iso97971;
         return self;
     }
+    /// Selects PBOC2 padding and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn PBOC2Padding(self: *Cryptobin) *Cryptobin {
         self.padding_kind = .pboc2;
         return self;
     }
+    /// Selects TBC padding and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn TBCPadding(self: *Cryptobin) *Cryptobin {
         self.padding_kind = .tbc;
         return self;
     }
 
+    /// Copies the current input into the parsed-data buffer without decoding or transforming it.
+    /// Ownership: the copy is owned by self and released by deinit; the returned pointer is borrowed.
     pub fn NoParse(self: *Cryptobin) !*Cryptobin {
         try self.replace(&self.parsed_data, self.data);
         return self;
@@ -499,6 +589,8 @@ pub const Cryptobin = struct {
         return output;
     }
 
+    /// Encrypts the current input according to the selected algorithm, mode, and padding.
+    /// Ownership: the encrypted result becomes owned by self and is released by deinit; the returned pointer is borrowed.
     pub fn Encrypt(self: *Cryptobin) !*Cryptobin {
         var output: []u8 = undefined;
         if (self.algorithm == .chacha20_poly1305 or self.algorithm == .xchacha20_poly1305) {
@@ -520,6 +612,8 @@ pub const Cryptobin = struct {
         return self;
     }
 
+    /// Decrypts the current input according to the selected algorithm, mode, and padding.
+    /// Ownership: the decrypted result becomes owned by self and is released by deinit; the returned pointer is borrowed.
     pub fn Decrypt(self: *Cryptobin) !*Cryptobin {
         var output: []u8 = undefined;
         if (self.algorithm == .chacha20_poly1305 or self.algorithm == .xchacha20_poly1305) {
@@ -541,24 +635,36 @@ pub const Cryptobin = struct {
         return self;
     }
 
+    /// Returns the current parsed data without copying it.
+    /// Ownership: the returned slice is borrowed from self and must not be freed; it is valid until self changes or is deinitialized.
     pub fn ToBytes(self: *const Cryptobin) []const u8 {
         return self.parsed_data;
     }
+    /// Returns the current parsed data as a borrowed byte string without copying it.
+    /// Ownership: the returned slice is borrowed from self and must not be freed; it is valid until self changes or is deinitialized.
     pub fn ToString(self: *const Cryptobin) []const u8 {
         return self.parsed_data;
     }
+    /// Encodes the current parsed data as Base64.
+    /// Ownership: the returned slice is newly allocated with self's allocator; the caller must release it with self.allocator.free.
     pub fn ToBase64String(self: *const Cryptobin) ![]u8 {
         return encoding.base64Encode(self.allocator, self.parsed_data);
     }
+    /// Encodes the current parsed data as lower-case hexadecimal text.
+    /// Ownership: the returned slice is newly allocated with self's allocator; the caller must release it with self.allocator.free.
     pub fn ToHexString(self: *const Cryptobin) ![]u8 {
         return encoding.hexEncode(self.allocator, self.parsed_data);
     }
 };
 
+/// Creates an empty Cryptobin value using allocator.
+/// Ownership: the returned struct is an inline value; call deinit to release buffers it later owns.
 pub fn New(allocator: std.mem.Allocator) Cryptobin {
     return Cryptobin.init(allocator);
 }
 
+/// Creates a Cryptobin whose input is a copy of value.
+/// Ownership: the returned value owns its internal buffers; call result.deinit() when finished.
 pub fn FromBytes(allocator: std.mem.Allocator, value: []const u8) !Cryptobin {
     var result = Cryptobin.init(allocator);
     errdefer result.deinit();
@@ -566,10 +672,14 @@ pub fn FromBytes(allocator: std.mem.Allocator, value: []const u8) !Cryptobin {
     return result;
 }
 
+/// Creates a Cryptobin from a byte string.
+/// Ownership: the returned value owns its internal buffers; call result.deinit() when finished.
 pub fn FromString(allocator: std.mem.Allocator, value: []const u8) !Cryptobin {
     return FromBytes(allocator, value);
 }
 
+/// Creates a Cryptobin by decoding a Base64 string.
+/// Ownership: the returned value owns its internal buffers; call result.deinit() when finished.
 pub fn FromBase64String(allocator: std.mem.Allocator, value: []const u8) !Cryptobin {
     var result = Cryptobin.init(allocator);
     errdefer result.deinit();
@@ -577,6 +687,8 @@ pub fn FromBase64String(allocator: std.mem.Allocator, value: []const u8) !Crypto
     return result;
 }
 
+/// Creates a Cryptobin by decoding a hexadecimal string.
+/// Ownership: the returned value owns its internal buffers; call result.deinit() when finished.
 pub fn FromHexString(allocator: std.mem.Allocator, value: []const u8) !Cryptobin {
     var result = Cryptobin.init(allocator);
     errdefer result.deinit();

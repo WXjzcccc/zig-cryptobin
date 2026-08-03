@@ -11,6 +11,8 @@ pub const Sm3 = struct {
     buffer_len: usize = 0,
     total_len: u64 = 0,
 
+    /// Initializes an SM3 hashing context.
+    /// Ownership: the returned context is an inline value and requires no release.
     pub fn init(_: anytype) Self {
         return .{
             .state = .{
@@ -20,6 +22,8 @@ pub const Sm3 = struct {
         };
     }
 
+    /// Adds input to this incremental SM3 context.
+    /// Ownership: no allocation is performed and the input slice remains caller-owned.
     pub fn update(self: *Self, input: []const u8) void {
         self.total_len +%= @intCast(input.len);
         var remaining = input;
@@ -46,6 +50,8 @@ pub const Sm3 = struct {
         }
     }
 
+    /// Finalizes a copy of the context and writes the digest into output.
+    /// Ownership: no allocation is performed; the caller owns and manages output.
     pub fn final(self: *const Self, output: *[digest_length]u8) void {
         var copy = self.*;
         const bit_len = copy.total_len *% 8;
@@ -64,6 +70,8 @@ pub const Sm3 = struct {
         }
     }
 
+    /// Computes an SM3 digest in the caller-provided output buffer.
+    /// Ownership: no allocation is performed; the caller owns and manages output.
     pub fn hash(input: []const u8, output: []u8, _: anytype) void {
         std.debug.assert(output.len >= digest_length);
         var context = Self.init(.{});
@@ -123,6 +131,8 @@ pub const Sm3 = struct {
 
 pub const HmacSm3 = std.crypto.auth.hmac.Hmac(Sm3);
 
+/// Computes an SM3 digest as a fixed-size array.
+/// Ownership: the returned array is an inline value and requires no release.
 pub fn sum(input: []const u8) [Sm3.digest_length]u8 {
     var output: [Sm3.digest_length]u8 = undefined;
     Sm3.hash(input, &output, .{});

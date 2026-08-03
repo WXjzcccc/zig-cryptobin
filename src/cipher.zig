@@ -23,6 +23,8 @@ pub const Algorithm = enum {
 pub const Error = error{ InvalidKeyLength, InvalidBlockLength };
 pub const max_block_length = 16;
 
+/// Returns the block size used by the selected algorithm, in bytes.
+/// Ownership: no allocation is performed and the returned integer requires no release.
 pub fn blockLength(algorithm: Algorithm) usize {
     return switch (algorithm) {
         .des, .two_des, .triple_des, .tea, .xtea => des.block_length,
@@ -30,6 +32,8 @@ pub fn blockLength(algorithm: Algorithm) usize {
     };
 }
 
+/// Validates the key length requirements for the selected algorithm.
+/// Ownership: no allocation is performed; the returned void value requires no release.
 pub fn validateKey(algorithm: Algorithm, key: []const u8) Error!void {
     switch (algorithm) {
         .aes => if (key.len != 16 and key.len != 24 and key.len != 32) return error.InvalidKeyLength,
@@ -43,6 +47,8 @@ pub fn validateKey(algorithm: Algorithm, key: []const u8) Error!void {
     }
 }
 
+/// Encrypts one block into the caller-provided output buffer.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn encryptBlock(algorithm: Algorithm, key: []const u8, input: []const u8, output: []u8, tea_rounds: u32) (Error || tea.Error)!void {
     if (input.len != blockLength(algorithm) or output.len != blockLength(algorithm)) return error.InvalidBlockLength;
     try validateKey(algorithm, key);
@@ -110,6 +116,8 @@ pub fn encryptBlock(algorithm: Algorithm, key: []const u8, input: []const u8, ou
     @memcpy(output, &out_block);
 }
 
+/// Decrypts one block into the caller-provided output buffer.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn decryptBlock(algorithm: Algorithm, key: []const u8, input: []const u8, output: []u8, tea_rounds: u32) (Error || tea.Error)!void {
     if (input.len != blockLength(algorithm) or output.len != blockLength(algorithm)) return error.InvalidBlockLength;
     try validateKey(algorithm, key);

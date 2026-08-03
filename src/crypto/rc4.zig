@@ -2,6 +2,8 @@ const std = @import("std");
 
 pub const Error = error{InvalidKeyLength};
 
+/// XORs input with the RC4 keystream and writes into output.
+/// Ownership: no allocation is performed; the caller owns and manages output.
 pub fn xor(output: []u8, input: []const u8, key: []const u8) Error!void {
     if (key.len == 0 or key.len > 256) return error.InvalidKeyLength;
     if (output.len != input.len) return error.InvalidKeyLength;
