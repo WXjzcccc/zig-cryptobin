@@ -2,8 +2,6 @@
 
 `zig-cryptobin` is a Zig implementation inspired by [`go-cryptobin`](https://github.com/deatil/go-cryptobin). It keeps the same high-level configuration order while making allocation and failures explicit in Zig.
 
-Repository: <https://github.com/WXjzcccc/zig-cryptobin>
-
 ## Supported modules
 
 - Fluent `Cryptobin` API: `From*`, `SetKey`, `SetIv`, algorithm/mode/padding selection, `Encrypt`/`Decrypt`, and `To*` encodings.
