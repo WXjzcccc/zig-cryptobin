@@ -29,7 +29,7 @@ fn deriveWithHash(comptime Digest: type, allocator: std.mem.Allocator, password:
     while (generated < length) : (pass += 1) {
         var context = Digest.init(.{});
         var zero_count = pass;
-        const zeros = [_]u8{0} ** 64;
+        const zeros: [64]u8 = @splat(0);
         while (zero_count > 0) {
             const amount = @min(zero_count, zeros.len);
             context.update(zeros[0..amount]);

@@ -83,6 +83,6 @@ test "RFC 7748 X25519 Diffie-Hellman exchange" {
 }
 
 test "X25519 rejects invalid key lengths" {
-    try std.testing.expectError(error.InvalidSecretKeyLength, secretKeyFromBytes(&[_]u8{0} ** 31));
-    try std.testing.expectError(error.InvalidPublicKeyLength, publicKeyFromBytes(&[_]u8{0} ** 31));
+    try std.testing.expectError(error.InvalidSecretKeyLength, secretKeyFromBytes(&@as([31]u8, @splat(0))));
+    try std.testing.expectError(error.InvalidPublicKeyLength, publicKeyFromBytes(&@as([31]u8, @splat(0))));
 }

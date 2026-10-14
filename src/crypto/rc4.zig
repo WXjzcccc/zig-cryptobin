@@ -29,7 +29,7 @@ pub fn xor(output: []u8, input: []const u8, key: []const u8) Error!void {
 test "RFC 6229 RC4 vector" {
     const key = [_]u8{ 0x01, 0x02, 0x03, 0x04, 0x05 };
     var actual: [16]u8 = undefined;
-    try xor(&actual, &[_]u8{0} ** 16, &key);
+    try xor(&actual, &@as([16]u8, @splat(0)), &key);
     try std.testing.expectEqualSlices(u8, &[_]u8{
         0xb2, 0x39, 0x63, 0x05, 0xf0, 0x3d, 0xc0, 0x27,
         0xcc, 0xc3, 0x52, 0x4a, 0x0a, 0x11, 0x18, 0xa8,

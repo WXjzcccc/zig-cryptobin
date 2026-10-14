@@ -115,7 +115,7 @@ test "RFC 8032 Ed25519 test vector one" {
 }
 
 test "Ed25519 detects a changed message" {
-    const key_pair = try KeyPair.fromSeed([_]u8{0x42} ** seed_length);
+    const key_pair = try KeyPair.fromSeed(@as([seed_length]u8, @splat(0x42)));
     const signature = try sign(key_pair.secret_key, "cryptobin");
     try std.testing.expect(verify(key_pair.public_key, "cryptobin", signature));
     try std.testing.expect(!verify(key_pair.public_key, "cryptobim", signature));

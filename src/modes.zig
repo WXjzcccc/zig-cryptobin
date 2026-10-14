@@ -27,8 +27,8 @@ pub fn apply(allocator: std.mem.Allocator, algorithm: cipher.Algorithm, key: []c
     const output = try allocator.alloc(u8, input.len);
     errdefer allocator.free(output);
 
-    var feedback: [cipher.max_block_length]u8 = [_]u8{0} ** cipher.max_block_length;
-    var counter: [cipher.max_block_length]u8 = [_]u8{0} ** cipher.max_block_length;
+    var feedback: [cipher.max_block_length]u8 = @splat(0);
+    var counter: [cipher.max_block_length]u8 = @splat(0);
     if (kind != .ecb) {
         @memcpy(feedback[0..block_size], iv);
         @memcpy(counter[0..block_size], iv);
@@ -40,7 +40,7 @@ pub fn apply(allocator: std.mem.Allocator, algorithm: cipher.Algorithm, key: []c
         const source = input[index .. index + size];
         const destination = output[index .. index + size];
         var stream: [cipher.max_block_length]u8 = undefined;
-        var block: [cipher.max_block_length]u8 = [_]u8{0} ** cipher.max_block_length;
+        var block: [cipher.max_block_length]u8 = @splat(0);
         @memcpy(block[0..size], source);
 
         switch (kind) {

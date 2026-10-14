@@ -57,7 +57,7 @@ pub const Sm3 = struct {
         const bit_len = copy.total_len *% 8;
         copy.update(&[_]u8{0x80});
 
-        const zeros = [_]u8{0} ** block_length;
+        const zeros: [block_length]u8 = @splat(0);
         const zero_len = if (copy.buffer_len <= 56) 56 - copy.buffer_len else block_length + 56 - copy.buffer_len;
         copy.update(zeros[0..zero_len]);
 

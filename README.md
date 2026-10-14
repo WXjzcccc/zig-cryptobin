@@ -2,6 +2,8 @@
 
 `zig-cryptobin` is a Zig implementation inspired by [`go-cryptobin`](https://github.com/deatil/go-cryptobin). It keeps the same high-level configuration order while making allocation and failures explicit in Zig.
 
+It targets Zig 0.17.0 or newer (`minimum_zig_version = "0.17.0"`).
+
 ## Supported modules
 
 - Fluent `Cryptobin` API: `From*`, `SetKey`, `SetIv`, algorithm/mode/padding selection, `Encrypt`/`Decrypt`, and `To*` encodings.
@@ -25,7 +27,7 @@
 
 ### Add as a dependency
 
-From another Zig 0.16 project, add this repository as a dependency. While working from a local checkout:
+From another Zig 0.17 project, add this repository as a dependency. While working from a local checkout:
 
 ```sh
 zig fetch --save path-to-zig-cryptobin

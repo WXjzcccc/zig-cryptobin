@@ -19,7 +19,7 @@ pub fn randomart(allocator: std.mem.Allocator, fingerprint: []const u8) std.mem.
     const width = 17;
     const height = 9;
     const palette = " .o+=*BOX@%&#/^SE";
-    var field: [width][height]u8 = [_][height]u8{[_]u8{0} ** height} ** width;
+    var field: [width][height]u8 = @splat(@as([height]u8, @splat(0)));
     var x: usize = width / 2;
     var y: usize = height / 2;
 

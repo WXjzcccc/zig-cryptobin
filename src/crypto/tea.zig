@@ -97,8 +97,8 @@ pub fn decryptXtea(output: *[8]u8, input: [8]u8, key: [16]u8) void {
 }
 
 test "TEA standard vector" {
-    const key = [_]u8{0} ** 16;
-    const input = [_]u8{0} ** 8;
+    const key: [16]u8 = @splat(0);
+    const input: [8]u8 = @splat(0);
     var output: [8]u8 = undefined;
     try encrypt(&output, input, key, 64);
     try std.testing.expectEqualSlices(u8, &[_]u8{ 0x41, 0xea, 0x3a, 0x0a, 0x94, 0xba, 0xa9, 0x40 }, &output);
