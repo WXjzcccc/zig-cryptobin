@@ -219,6 +219,14 @@ pub const Cryptobin = struct {
         return self;
     }
 
+    /// Selects Blowfish and returns self.
+    /// Ownership: no allocation is performed; release the Cryptobin with deinit.
+    pub fn Blowfish(self: *Cryptobin) *Cryptobin {
+        self.algorithm = .blowfish;
+        self.disableAead();
+        return self;
+    }
+
     /// Selects ChaCha20 and sets its initial block counter.
     /// Ownership: no allocation is performed; release the Cryptobin with deinit.
     pub fn Chacha20(self: *Cryptobin, counter: u32) *Cryptobin {
@@ -858,6 +866,38 @@ test "SM4 fluent CBC PKCS7 round trip" {
     _ = try plain.SetIv(iv);
     _ = try plain.SM4().CBC().PKCS7Padding().Decrypt();
     try std.testing.expectEqualSlices(u8, "SM4 compatible data", plain.ToBytes());
+}
+
+test "Blowfish ECB official vector and CBC round trip" {
+    const allocator = std.testing.allocator;
+    var key: [8]u8 = undefined;
+    var plain: [8]u8 = undefined;
+    var expected: [8]u8 = undefined;
+    _ = try std.fmt.hexToBytes(&key, "fedcba9876543210");
+    _ = try std.fmt.hexToBytes(&plain, "0123456789abcdef");
+    _ = try std.fmt.hexToBytes(&expected, "0aceab0fc6a0a28d");
+    var vector = try FromBytes(allocator, &plain);
+    defer vector.deinit();
+    _ = try vector.SetKey(&key);
+    _ = try vector.Blowfish().ECB().NoPadding().Encrypt();
+    try std.testing.expectEqualSlices(u8, &expected, vector.ToBytes());
+
+    const fluent_key = "0123456789abcdef";
+    const fluent_iv = "fedcba98";
+    var value = try FromString(allocator, "blowfish compatible data");
+    defer value.deinit();
+    _ = try value.SetKey(fluent_key);
+    _ = try value.SetIv(fluent_iv);
+    _ = try value.Blowfish().CBC().PKCS7Padding().Encrypt();
+    var expected_cbc: [32]u8 = undefined;
+    _ = try std.fmt.hexToBytes(&expected_cbc, "aacbb71435efe0cac137d66809b08d3138e2f489abab51d420ee96d3cd0cd358");
+    try std.testing.expectEqualSlices(u8, &expected_cbc, value.ToBytes());
+    var recovered = try FromBytes(allocator, value.ToBytes());
+    defer recovered.deinit();
+    _ = try recovered.SetKey(fluent_key);
+    _ = try recovered.SetIv(fluent_iv);
+    _ = try recovered.Blowfish().CBC().PKCS7Padding().Decrypt();
+    try std.testing.expectEqualSlices(u8, "blowfish compatible data", recovered.ToBytes());
 }
 
 test "AES GCM with empty additional data" {

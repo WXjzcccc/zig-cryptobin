@@ -4,6 +4,7 @@ const des = @import("crypto/des.zig");
 const rc4 = @import("crypto/rc4.zig");
 const tea = @import("crypto/tea.zig");
 const sm4 = @import("crypto/sm4.zig");
+const blowfish = @import("crypto/blowfish.zig");
 
 pub const Algorithm = enum {
     aes,
@@ -15,6 +16,7 @@ pub const Algorithm = enum {
     tea,
     xtea,
     sm4,
+    blowfish,
     chacha20,
     chacha20_poly1305,
     xchacha20_poly1305,
@@ -28,6 +30,7 @@ pub const max_block_length = 16;
 pub fn blockLength(algorithm: Algorithm) usize {
     return switch (algorithm) {
         .des, .two_des, .triple_des, .tea, .xtea => des.block_length,
+        .blowfish => blowfish.block_length,
         else => 16,
     };
 }
@@ -43,6 +46,7 @@ pub fn validateKey(algorithm: Algorithm, key: []const u8) Error!void {
         .rc4, .rc4_md5 => if (key.len == 0 or key.len > 256) return error.InvalidKeyLength,
         .tea, .xtea => if (key.len != 16) return error.InvalidKeyLength,
         .sm4 => if (key.len != 16) return error.InvalidKeyLength,
+        .blowfish => if (key.len < blowfish.min_key_length or key.len > blowfish.max_key_length) return error.InvalidKeyLength,
         .chacha20, .chacha20_poly1305, .xchacha20_poly1305 => if (key.len != 32) return error.InvalidKeyLength,
     }
 }
@@ -89,6 +93,15 @@ pub fn encryptBlock(algorithm: Algorithm, key: []const u8, input: []const u8, ou
             if (algorithm == .two_des) @memcpy(&third, key[0..8]) else @memcpy(&third, key[16..24]);
             des.encryptTriple(&out_block, in_block, first, second, third);
         }
+        @memcpy(output, &out_block);
+        return;
+    }
+    if (algorithm == .blowfish) {
+        var in_block: [8]u8 = undefined;
+        var out_block: [8]u8 = undefined;
+        @memcpy(&in_block, input);
+        const context = blowfish.Context.init(key);
+        context.encrypt(&out_block, in_block);
         @memcpy(output, &out_block);
         return;
     }
@@ -161,6 +174,15 @@ pub fn decryptBlock(algorithm: Algorithm, key: []const u8, input: []const u8, ou
         @memcpy(output, &out_block);
         return;
     }
+    if (algorithm == .blowfish) {
+        var in_block: [8]u8 = undefined;
+        var out_block: [8]u8 = undefined;
+        @memcpy(&in_block, input);
+        const context = blowfish.Context.init(key);
+        context.decrypt(&out_block, in_block);
+        @memcpy(output, &out_block);
+        return;
+    }
     var in_block: [max_block_length]u8 = undefined;
     var out_block: [max_block_length]u8 = undefined;
     @memcpy(&in_block, input);
@@ -192,4 +214,19 @@ test "aes block vector" {
     var actual: [16]u8 = undefined;
     try encryptBlock(.aes, &key, &plain, &actual, 64);
     try std.testing.expectEqualSlices(u8, &expected, &actual);
+}
+
+test "blowfish block vector" {
+    var key: [8]u8 = undefined;
+    var plain: [8]u8 = undefined;
+    var expected: [8]u8 = undefined;
+    _ = try std.fmt.hexToBytes(&key, "fedcba9876543210");
+    _ = try std.fmt.hexToBytes(&plain, "0123456789abcdef");
+    _ = try std.fmt.hexToBytes(&expected, "0aceab0fc6a0a28d");
+    var actual: [8]u8 = undefined;
+    try encryptBlock(.blowfish, &key, &plain, &actual, 64);
+    try std.testing.expectEqualSlices(u8, &expected, &actual);
+    var recovered: [8]u8 = undefined;
+    try decryptBlock(.blowfish, &key, &actual, &recovered, 64);
+    try std.testing.expectEqualSlices(u8, &plain, &recovered);
 }

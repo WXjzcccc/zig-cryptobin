@@ -12,6 +12,7 @@ It targets Zig 0.17.0 or newer (`minimum_zig_version = "0.17.0"`).
 - RC4 and RC4-MD5 stream ciphers.
 - TEA (including configurable even round counts) and XTEA.
 - SM4 with ECB, CBC, PCBC, CFB, OFB, and CTR.
+- Blowfish (1–56 byte keys) with ECB, CBC, PCBC, CFB, OFB, and CTR.
 - ChaCha20, ChaCha20-Poly1305, and XChaCha20-Poly1305.
 - NoPadding, Zero, PKCS5, PKCS7, X9.23, ISO10126, ISO7816-4, ISO97971, PBOC2, and TBC padding.
 - Base64 and hexadecimal codecs.

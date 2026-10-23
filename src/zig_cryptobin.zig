@@ -10,6 +10,7 @@ pub const des = @import("crypto/des.zig");
 pub const rc4 = @import("crypto/rc4.zig");
 pub const tea = @import("crypto/tea.zig");
 pub const sm4 = @import("crypto/sm4.zig");
+pub const blowfish = @import("crypto/blowfish.zig");
 pub const random = @import("random.zig");
 pub const pgp_s2k = @import("pgp_s2k.zig");
 pub const bencode = @import("bencode.zig");
@@ -37,6 +38,7 @@ test {
     _ = rc4;
     _ = tea;
     _ = sm4;
+    _ = blowfish;
     _ = random;
     _ = pgp_s2k;
     _ = bencode;
